@@ -14,7 +14,7 @@ interface IProps {
  * Perspective library adds load to HTMLElement prototype.
  * This interface acts as a wrapper for Typescript compiler.
  */
-interface PerspectiveViewerElement {
+interface PerspectiveViewerElement extends HTMLElement {
   load: (table: Table) => void,
 }
 
@@ -32,7 +32,7 @@ class Graph extends Component<IProps, {}> {
 
   componentDidMount() {
     // Get element to attach the table from the DOM.
-    const elem: PerspectiveViewerElement = document.getElementsByTagName('perspective-viewer')[0] as unknown as PerspectiveViewerElement;
+    const elem = document.getElementsByTagName('perspective-viewer')[0] as unknown as PerspectiveViewerElement;
 
     const schema = {
       stock: 'string',
@@ -46,18 +46,34 @@ class Graph extends Component<IProps, {}> {
     }
     if (this.table) {
       // Load the `table` in the `<perspective-viewer>` DOM reference.
-
-      // Add more Perspective configurations here.
       elem.load(this.table);
+
+      // --- FIX 1: Add Perspective configurations ---
+      // Set the view to a line chart
+      elem.setAttribute('view', 'y_line');
+      
+      // Group the data by stock name (creates two lines)
+      elem.setAttribute('row-pivots', '["stock"]');
+      
+      // Define what to plot on the y-axis
+      elem.setAttribute('columns', '["top_ask_price", "top_bid_price"]');
+      
+      // Define how to aggregate data (average)
+      elem.setAttribute('aggregates', JSON.stringify({
+        stock: 'distinct count',
+        top_ask_price: 'avg',
+        top_bid_price: 'avg',
+        timestamp: 'distinct count',
+      }));
     }
   }
 
   componentDidUpdate() {
     // Everytime the data props is updated, insert the data into Perspective table
     if (this.table) {
-      // As part of the task, you need to fix the way we update the data props to
-      // avoid inserting duplicated entries into Perspective table again.
-      this.table.update(this.props.data.map((el: any) => {
+      // --- FIX 2: Update with only new data ---
+      // We use slice(-2) to only update with the two most recent data points
+      this.table.update(this.props.data.slice(-2).map((el: any) => {
         // Format the data from ServerRespond to the schema
         return {
           stock: el.stock,
