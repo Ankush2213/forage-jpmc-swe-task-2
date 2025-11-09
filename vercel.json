@@ -16,7 +16,7 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "datafeed/server.py"
+      "dest": "datafeed/server3.py" 
     },
     {
       "src": "/(.*)",
